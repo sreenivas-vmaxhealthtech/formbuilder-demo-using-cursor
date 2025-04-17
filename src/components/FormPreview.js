@@ -151,7 +151,7 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
       sections: sections.map(section => ({
         id: section.id,
         title: section.title,
-        elements: section.elements.map(element => ({
+        elements: section.grid ? section.grid.filter(Boolean).map(element => ({
           id: element.id,
           type: element.type,
           label: element.label,
@@ -167,7 +167,7 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
             pattern: element.pattern,
             customValidation: element.customValidation
           }
-        }))
+        })) : []
       })),
       elements: elements.map(element => ({
         id: element.id,
