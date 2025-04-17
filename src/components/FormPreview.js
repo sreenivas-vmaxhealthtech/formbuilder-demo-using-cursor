@@ -113,11 +113,23 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
       
       // Also update the element in any section that contains it
       const updatedSections = sections.map(section => {
+        // Update elements in the section's elements array
         const updatedElements = section.elements.map(element => 
           element.id === editingElement.id ? { ...element, ...editingValues } : element
         );
-        return { ...section, elements: updatedElements };
+        
+        // Update elements in the section's grid
+        const updatedGrid = section.grid ? section.grid.map(element => 
+          element && element.id === editingElement.id ? { ...element, ...editingValues } : element
+        ) : section.grid;
+        
+        return {
+          ...section,
+          elements: updatedElements,
+          grid: updatedGrid
+        };
       });
+      
       setSections(updatedSections);
     }
     setEditingElement(null);
