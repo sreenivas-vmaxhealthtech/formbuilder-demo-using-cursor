@@ -5,7 +5,6 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
   const [editingValues, setEditingValues] = useState({});
   const [sections, setSections] = useState([]);
   const [currentSection, setCurrentSection] = useState(null);
-  const [draggedElement, setDraggedElement] = useState(null);
   const editFormRef = useRef(null);
 
   // Close edit form when clicking outside
@@ -47,10 +46,12 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
       const newSection = {
         id: Date.now(),
         title: 'New Section',
-        elements: []
+        elements: [],
+        rows: 2,
+        columns: 2,
+        grid: Array(4).fill(null) // 2x2 grid initially
       };
       setSections([...sections, newSection]);
-      // Don't automatically set currentSection when creating a new section
     } else if (elementData.type === 'grid') {
       const newGrid = {
         id: Date.now(),
@@ -71,11 +72,21 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
     } else {
       const newElement = { ...elementData, id: Date.now() };
       if (currentSection) {
-        const updatedSections = sections.map(section => 
-          section.id === currentSection 
-            ? { ...section, elements: [...section.elements, newElement] }
-            : section
-        );
+        const updatedSections = sections.map(section => {
+          if (section.id === currentSection) {
+            const gridIndex = section.grid.indexOf(null);
+            if (gridIndex !== -1) {
+              const newGrid = [...section.grid];
+              newGrid[gridIndex] = newElement;
+              return {
+                ...section,
+                grid: newGrid
+              };
+            }
+            return section;
+          }
+          return section;
+        });
         setSections(updatedSections);
       } else {
         onAddElement(newElement);
@@ -200,8 +211,6 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
   };
 
   const handleElementDragStart = (e, element, sourceSectionId = null) => {
-    setDraggedElement({ element, sourceSectionId });
-    
     // Create a clean copy of the element without circular references
     const elementCopy = {
       id: element.id,
@@ -501,6 +510,25 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
     );
   };
 
+  const handleSectionGridChange = (sectionId, rows, columns) => {
+    const updatedSections = sections.map(section => {
+      if (section.id === sectionId) {
+        const totalCells = rows * columns;
+        const currentGrid = section.grid || [];
+        const newGrid = Array(totalCells).fill(null).map((_, index) => currentGrid[index] || null);
+        
+        return {
+          ...section,
+          rows,
+          columns,
+          grid: newGrid
+        };
+      }
+      return section;
+    });
+    setSections(updatedSections);
+  };
+
   return (
     <div
       className="form-preview-container"
@@ -529,7 +557,7 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
             <div className="section-header">
               <h3>{section.title}</h3>
               <div className="element-controls">
-                <button className="edit-button" onClick={(e) => handleEdit(section, e)}>Edit Title</button>
+                <button className="edit-button" onClick={(e) => handleEdit(section, e)}>Edit Section</button>
                 <button onClick={(e) => {
                   e.stopPropagation();
                   setSections(sections.filter(s => s.id !== section.id));
@@ -551,16 +579,41 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
                     autoFocus
                   />
                 </div>
+                <div className="form-control">
+                  <label>Rows</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={editingValues.rows || section.rows || 2}
+                    onChange={(e) => {
+                      const rows = parseInt(e.target.value) || 1;
+                      handleEditChange('rows', rows);
+                      handleSectionGridChange(section.id, rows, editingValues.columns || section.columns || 2);
+                    }}
+                  />
+                </div>
+                <div className="form-control">
+                  <label>Columns</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="6"
+                    value={editingValues.columns || section.columns || 2}
+                    onChange={(e) => {
+                      const columns = parseInt(e.target.value) || 1;
+                      handleEditChange('columns', columns);
+                      handleSectionGridChange(section.id, editingValues.rows || section.rows || 2, columns);
+                    }}
+                  />
+                </div>
                 <div className="button-group">
                   <button 
                     className="save-button"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      // Directly update the section title
-                      updateSectionTitle(section.id, editingValues.title);
-                      setEditingElement(null);
-                      setEditingValues({});
+                      handleSaveEdit();
                     }}
                   >
                     Save
@@ -580,38 +633,71 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
             ) : (
               <div 
                 className="section-content"
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${section.columns || 2}, 1fr)`,
+                  gridTemplateRows: `repeat(${section.rows || 2}, minmax(100px, auto))`,
+                  gap: '10px',
+                  padding: '15px'
                 }}
-                onDrop={(e) => handleElementDrop(e, section.id)}
               >
-                {section.elements.map((element) => (
-                  <div key={element.id} className="preview-element">
-                    <div className="element-controls">
-                      <div 
-                        className="drag-handle"
-                        draggable
-                        onDragStart={(e) => handleElementDragStart(e, element, section.id)}
-                      >
-                        ⋮⋮
+                {(section.grid || Array(section.rows * section.columns || 4).fill(null)).map((element, index) => (
+                  <div
+                    key={index}
+                    className="grid-cell"
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      
+                      try {
+                        const elementData = JSON.parse(e.dataTransfer.getData('application/json'));
+                        if (elementData.type !== 'section') {
+                          const newElement = { ...elementData, id: Date.now() };
+                          const updatedSections = sections.map(s => {
+                            if (s.id === section.id) {
+                              const newGrid = [...s.grid];
+                              newGrid[index] = newElement;
+                              return { ...s, grid: newGrid };
+                            }
+                            return s;
+                          });
+                          setSections(updatedSections);
+                        }
+                      } catch (error) {
+                        console.error('Error handling grid cell drop:', error);
+                      }
+                    }}
+                  >
+                    {element ? (
+                      <div className="preview-element">
+                        <div className="element-controls">
+                          <button className="edit-button" onClick={(e) => handleEdit(element, e)}>Edit</button>
+                          <button onClick={(e) => {
+                            e.stopPropagation();
+                            const updatedSections = sections.map(s => {
+                              if (s.id === section.id) {
+                                const newGrid = [...s.grid];
+                                newGrid[index] = null;
+                                return { ...s, grid: newGrid };
+                              }
+                              return s;
+                            });
+                            setSections(updatedSections);
+                          }}>Remove</button>
+                        </div>
+                        <div className="form-control">
+                          <label>{element.label}</label>
+                          {renderFormElement(element)}
+                        </div>
+                        {editingElement?.id === element.id && renderEditForm(editingElement)}
                       </div>
-                      <button className="edit-button" onClick={(e) => handleEdit(element, e)}>Edit</button>
-                      <button onClick={(e) => {
-                        e.stopPropagation();
-                        const updatedSections = sections.map(s =>
-                          s.id === section.id
-                            ? { ...s, elements: s.elements.filter(e => e.id !== element.id) }
-                            : s
-                        );
-                        setSections(updatedSections);
-                      }}>Remove</button>
-                    </div>
-                    <div className="form-control">
-                      <label>{element.label}</label>
-                      {renderFormElement(element)}
-                    </div>
-                    {editingElement?.id === element.id && renderEditForm(editingElement)}
+                    ) : (
+                      <div className="empty-grid-cell">Drop element here</div>
+                    )}
                   </div>
                 ))}
               </div>
