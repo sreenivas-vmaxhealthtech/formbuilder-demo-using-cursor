@@ -52,45 +52,47 @@
 }
 
 .section-header {
-  background-color: #f8f9fa;
+  background-color: #ffffff;
+  border-radius: 8px;
   padding: 15px;
-  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .section-header h3 {
   margin: 0;
-  color: #495057;
-  font-size: 18px;
-  font-weight: 600;
+  color: #212529;
+  font-size: 1.2rem;
 }
 
 .section-header .element-controls {
   position: static;
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  align-items: center;
 }
 
 .section-header .element-controls button {
   padding: 6px 12px;
-  font-size: 13px;
-  background-color: #f8f9fa;
-  border: 1px solid #ddd;
   border-radius: 4px;
+  border: none;
+  background-color: #f8f9fa;
+  color: #495057;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease-in-out;
 }
 
 .section-header .element-controls .edit-button {
   background-color: #e3f2fd;
-  border-color: #90caf9;
-  color: #0d47a1;
+  color: #2196f3;
 }
 
 .section-header .element-controls .edit-button:hover {
   background-color: #bbdefb;
+  color: #1976d2;
 }
 
 .section-header .element-controls button:last-child {
@@ -104,7 +106,17 @@
 }
 
 .section-content {
+  background-color: #ffffff;
+  border-radius: 8px;
   padding: 20px;
+  margin: 10px 0;
+  transition: all 0.2s ease-in-out;
+}
+
+.section-content.drag-over {
+  background-color: #e3f2fd;
+  border: 2px dashed #2196f3;
+  box-shadow: 0 0 15px rgba(33, 150, 243, 0.2);
 }
 
 .form-grid {
@@ -203,24 +215,34 @@
 }
 
 .element-controls {
-  position: absolute;
-  right: 10px;
-  top: 10px;
   display: flex;
-  gap: 5px;
+  gap: 10px;
+  align-items: center;
 }
 
 .element-controls button {
-  padding: 4px 8px;
-  font-size: 12px;
-  background-color: #f8f9fa;
-  border: 1px solid #ddd;
+  padding: 6px 12px;
   border-radius: 4px;
+  border: none;
+  background-color: #f8f9fa;
+  color: #495057;
   cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .element-controls button:hover {
   background-color: #e9ecef;
+  color: #212529;
+}
+
+.element-controls .edit-button {
+  background-color: #e3f2fd;
+  color: #2196f3;
+}
+
+.element-controls .edit-button:hover {
+  background-color: #bbdefb;
+  color: #1976d2;
 }
 
 .element-settings {
@@ -297,4 +319,207 @@
 
 .element-settings .cancel-button:hover {
   background-color: #5a6268;
+}
+
+/* Drop zone styles */
+.empty-grid-cell {
+  background-color: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.empty-grid-cell:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.empty-grid-cell.drag-over {
+  background-color: #e3f2fd;
+  border-color: #2196f3;
+  transform: scale(1.02);
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.2);
+}
+
+/* Grid cell styles */
+.grid-cell {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 15px;
+  transition: all 0.2s ease-in-out;
+  min-height: 120px;
+}
+
+.grid-cell.drag-over {
+  background-color: #e3f2fd;
+  border: 2px dashed #2196f3;
+  transform: scale(1.02);
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.2);
+}
+
+/* Form preview container styles */
+.form-preview-container {
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.form-preview-container.drag-over {
+  background-color: #e3f2fd;
+  border: 2px dashed #2196f3;
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.2);
+}
+
+/* Drag handle styles */
+.drag-handle {
+  cursor: move;
+  color: #adb5bd;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.drag-handle:hover {
+  background-color: #e9ecef;
+  color: #6c757d;
+}
+
+/* Custom checkbox and radio styles */
+.form-control input[type="checkbox"],
+.form-control input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #dee2e6;
+  border-radius: 4px;
+  margin-right: 10px;
+  position: relative;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-control input[type="radio"] {
+  border-radius: 50%;
+}
+
+.form-control input[type="checkbox"]:checked,
+.form-control input[type="radio"]:checked {
+  border-color: #2196f3;
+  background-color: #2196f3;
+}
+
+.form-control input[type="checkbox"]:checked::after,
+.form-control input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background-color: white;
+  border-radius: 2px;
+}
+
+.form-control input[type="radio"]:checked::after {
+  border-radius: 50%;
+}
+
+.form-control input[type="checkbox"]:hover,
+.form-control input[type="radio"]:hover {
+  border-color: #2196f3;
+}
+
+.form-control input[type="checkbox"]:focus,
+.form-control input[type="radio"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+}
+
+/* Checkbox and radio label styles */
+.form-control .checkbox-label,
+.form-control .radio-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  cursor: pointer;
+  user-select: none;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.form-control .checkbox-label:hover,
+.form-control .radio-label:hover {
+  color: #2196f3;
+}
+
+/* Radio group styles */
+.form-control .radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+/* Checkbox group styles */
+.form-control .checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+/* Form control styles */
+.form-control {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-control label {
+  margin-bottom: 8px;
+  color: #495057;
+  font-weight: 500;
+}
+
+/* Checkbox and radio specific styles */
+.form-control .checkbox-label,
+.form-control .radio-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.form-control .checkbox-label input[type="checkbox"],
+.form-control .radio-label input[type="radio"] {
+  margin-right: 8px;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.form-control .checkbox-label span,
+.form-control .radio-label span {
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+/* Radio and checkbox group styles */
+.form-control .radio-group,
+.form-control .checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 5px;
 } 
