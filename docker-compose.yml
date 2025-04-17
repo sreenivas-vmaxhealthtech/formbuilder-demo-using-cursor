@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  form-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: form-builder
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - form-builder-network
+
+networks:
+  form-builder-network:
+    driver: bridge
