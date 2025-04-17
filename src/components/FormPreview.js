@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import DynamicForm from './DynamicForm';
 
 function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement }) {
   const [editingElement, setEditingElement] = useState(null);
@@ -7,6 +8,7 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
   const [currentSection, setCurrentSection] = useState(null);
   const editFormRef = useRef(null);
   const [showJsonPopup, setShowJsonPopup] = useState(false);
+  const [showFormPopup, setShowFormPopup] = useState(false);
   const [jsonOutput, setJsonOutput] = useState('');
 
   // Close edit form when clicking outside
@@ -534,6 +536,57 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
     setSections(updatedSections);
   };
 
+  const handleViewForm = () => {
+    const formConfig = {
+      version: '1.0',
+      sections: sections.map(section => ({
+        id: section.id,
+        title: section.title,
+        elements: section.grid ? section.grid.filter(Boolean).map(element => ({
+          id: element.id,
+          type: element.type,
+          label: element.label,
+          placeholder: element.placeholder || '',
+          required: element.required || false,
+          options: element.options || [],
+          name: element.name || `field_${element.id}`,
+          columns: element.columns,
+          validation: {
+            required: element.required || false,
+            minLength: element.minLength,
+            maxLength: element.maxLength,
+            pattern: element.pattern,
+            customValidation: element.customValidation
+          }
+        })) : []
+      })),
+      elements: elements.map(element => ({
+        id: element.id,
+        type: element.type,
+        label: element.label,
+        placeholder: element.placeholder || '',
+        required: element.required || false,
+        options: element.options || [],
+        name: element.name || `field_${element.id}`,
+        columns: element.columns,
+        validation: {
+          required: element.required || false,
+          minLength: element.minLength,
+          maxLength: element.maxLength,
+          pattern: element.pattern,
+          customValidation: element.customValidation
+        }
+      }))
+    };
+
+    setJsonOutput(JSON.stringify(formConfig, null, 2));
+    setShowFormPopup(true);
+  };
+
+  const closeFormPopup = () => {
+    setShowFormPopup(false);
+  };
+
   return (
     <div
       className="form-preview-container"
@@ -543,9 +596,14 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
     >
       <div className="form-preview-header">
         <h2>Form Preview</h2>
-        <button className="publish-button" onClick={handlePublish}>
-          Publish Form
-        </button>
+        <div className="button-group">
+          <button className="publish-button" onClick={handlePublish}>
+            Publish Form
+          </button>
+          <button className="view-button" onClick={handleViewForm}>
+            View Form
+          </button>
+        </div>
       </div>
       
       {showJsonPopup && (
@@ -562,6 +620,20 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
               <button id="copy-button" className="copy-button" onClick={copyToClipboard}>
                 Copy to Clipboard
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {showFormPopup && (
+        <div className="form-popup-overlay">
+          <div className="form-popup">
+            <div className="form-popup-header">
+              <h3>Form Preview</h3>
+              <button className="close-button" onClick={closeFormPopup}>×</button>
+            </div>
+            <div className="form-popup-content">
+              <DynamicForm formConfig={JSON.parse(jsonOutput)} />
             </div>
           </div>
         </div>
