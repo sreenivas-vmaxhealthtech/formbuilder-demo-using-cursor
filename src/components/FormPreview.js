@@ -36,10 +36,17 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
 
   const handleDragOver = (e) => {
     e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
     const elementData = JSON.parse(e.dataTransfer.getData('application/json'));
     
     if (elementData.type === 'section') {
@@ -49,48 +56,13 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
         elements: [],
         rows: 2,
         columns: 2,
-        grid: Array(4).fill(null) // 2x2 grid initially
+        grid: Array(4).fill(null)
       };
       setSections([...sections, newSection]);
-    } else if (elementData.type === 'grid') {
-      const newGrid = {
-        id: Date.now(),
-        type: 'grid',
-        columns: 2,
-        elements: []
-      };
-      if (currentSection) {
-        const updatedSections = sections.map(section => 
-          section.id === currentSection 
-            ? { ...section, elements: [...section.elements, newGrid] }
-            : section
-        );
-        setSections(updatedSections);
-      } else {
-        onAddElement(newGrid);
-      }
     } else {
+      // For non-section elements, add them directly to the form
       const newElement = { ...elementData, id: Date.now() };
-      if (currentSection) {
-        const updatedSections = sections.map(section => {
-          if (section.id === currentSection) {
-            const gridIndex = section.grid.indexOf(null);
-            if (gridIndex !== -1) {
-              const newGrid = [...section.grid];
-              newGrid[gridIndex] = newElement;
-              return {
-                ...section,
-                grid: newGrid
-              };
-            }
-            return section;
-          }
-          return section;
-        });
-        setSections(updatedSections);
-      } else {
-        onAddElement(newElement);
-      }
+      onAddElement(newElement);
     }
   };
 
@@ -231,6 +203,7 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
   const handleElementDrop = (e, targetSectionId = null) => {
     e.preventDefault();
     e.stopPropagation();
+    e.currentTarget.classList.remove('drag-over');
     
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
@@ -274,13 +247,14 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
         }
       } else {
         // This is a new element being dropped
+        const newElement = { ...data, id: Date.now() };
         if (targetSectionId) {
           // Add to target section
           const updatedSections = sections.map(section => {
             if (section.id === targetSectionId) {
               return {
                 ...section,
-                elements: [...section.elements, { ...data, id: Date.now() }]
+                elements: [...section.elements, newElement]
               };
             }
             return section;
@@ -288,7 +262,7 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
           setSections(updatedSections);
         } else {
           // Add to main elements
-          onAddElement({ ...data, id: Date.now() });
+          onAddElement(newElement);
         }
       }
     } catch (error) {
@@ -533,6 +507,7 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
     <div
       className="form-preview-container"
       onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       <div className="form-preview-header">
@@ -545,8 +520,19 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          e.currentTarget.classList.add('drag-over');
         }}
-        onDrop={(e) => handleElementDrop(e)}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.currentTarget.classList.remove('drag-over');
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.currentTarget.classList.remove('drag-over');
+          handleElementDrop(e);
+        }}
       >
         {sections.map((section) => (
           <div 
@@ -640,6 +626,22 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
                   gap: '10px',
                   padding: '15px'
                 }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  e.currentTarget.classList.add('drag-over');
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  e.currentTarget.classList.remove('drag-over');
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  e.currentTarget.classList.remove('drag-over');
+                  handleElementDrop(e, section.id);
+                }}
               >
                 {(section.grid || Array(section.rows * section.columns || 4).fill(null)).map((element, index) => (
                   <div
@@ -648,10 +650,17 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
                     onDragOver={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      e.currentTarget.classList.add('drag-over');
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      e.currentTarget.classList.remove('drag-over');
                     }}
                     onDrop={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      e.currentTarget.classList.remove('drag-over');
                       
                       try {
                         const elementData = JSON.parse(e.dataTransfer.getData('application/json'));
