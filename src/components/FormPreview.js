@@ -6,6 +6,8 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
   const [sections, setSections] = useState([]);
   const [currentSection, setCurrentSection] = useState(null);
   const editFormRef = useRef(null);
+  const [showJsonPopup, setShowJsonPopup] = useState(false);
+  const [jsonOutput, setJsonOutput] = useState('');
 
   // Close edit form when clicking outside
   useEffect(() => {
@@ -188,9 +190,26 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
       }))
     };
 
-    console.log('Form Configuration:', JSON.stringify(formConfig, null, 2));
-    navigator.clipboard.writeText(JSON.stringify(formConfig, null, 2))
-      .then(() => alert('Form configuration copied to clipboard!'))
+    const jsonString = JSON.stringify(formConfig, null, 2);
+    setJsonOutput(jsonString);
+    setShowJsonPopup(true);
+  };
+
+  const closeJsonPopup = () => {
+    setShowJsonPopup(false);
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(jsonOutput)
+      .then(() => {
+        const copyButton = document.getElementById('copy-button');
+        if (copyButton) {
+          copyButton.textContent = 'Copied!';
+          setTimeout(() => {
+            copyButton.textContent = 'Copy to Clipboard';
+          }, 2000);
+        }
+      })
       .catch(err => console.error('Failed to copy:', err));
   };
 
@@ -528,6 +547,26 @@ function FormPreview({ elements, onAddElement, onRemoveElement, onUpdateElement 
           Publish Form
         </button>
       </div>
+      
+      {showJsonPopup && (
+        <div className="json-popup-overlay">
+          <div className="json-popup">
+            <div className="json-popup-header">
+              <h3>Form Configuration JSON</h3>
+              <button className="close-button" onClick={closeJsonPopup}>×</button>
+            </div>
+            <div className="json-popup-content">
+              <pre className="json-output">{jsonOutput}</pre>
+            </div>
+            <div className="json-popup-footer">
+              <button id="copy-button" className="copy-button" onClick={copyToClipboard}>
+                Copy to Clipboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <form
         onDragOver={(e) => {
           e.preventDefault();
